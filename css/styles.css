@@ -1,0 +1,229 @@
+:root {
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --border: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --income: #22c55e;
+  --expense: #ef4444;
+  --accent: #38bdf8;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding-bottom: 2rem;
+}
+
+.container {
+  width: 92%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.topbar {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.topbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar h1 {
+  font-size: 1.25rem;
+}
+
+.badge {
+  background-color: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.card h2 {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.card-income .card-value { color: var(--income); }
+.card-expense .card-value { color: var(--expense); }
+.card-balance .card-value { color: var(--accent); }
+
+.transactions-section {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-income {
+  color: var(--income);
+}
+
+.text-expense {
+  color: var(--expense);
+}
+/* Adicione estas regras ao final do styles.css */
+
+.form-section {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.form-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .form-grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr auto;
+    align-items: flex-end;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.form-group input,
+.form-group select {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: #0b1329;
+  border: none;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  height: 38px;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid #ef444455;
+  color: var(--expense);
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.text-center {
+  text-align: center;
+}

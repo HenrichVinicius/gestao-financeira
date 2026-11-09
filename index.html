@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão Financeira Pessoal</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <h1>Finanças Pessoais</h1>
+      <span class="badge">Versão 1.1</span>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Resumo de Saldos -->
+    <section class="cards-grid">
+      <div class="card card-balance">
+        <h2>Saldo Atual</h2>
+        <p class="card-value" id="total-balance">R$ 0,00</p>
+      </div>
+      <div class="card card-income">
+        <h2>Receitas do Mês</h2>
+        <p class="card-value" id="total-income">R$ 0,00</p>
+      </div>
+      <div class="card card-expense">
+        <h2>Despesas do Mês</h2>
+        <p class="card-value" id="total-expense">R$ 0,00</p>
+      </div>
+    </section>
+
+    <!-- Formulário de Nova Movimentação -->
+    <section class="form-section">
+      <h2>Nova Movimentação</h2>
+      <form id="transaction-form" class="form-grid">
+        <div class="form-group">
+          <label for="desc">Descrição</label>
+          <input type="text" id="desc" placeholder="Ex: Mercado, Salário..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Valor (R$)</label>
+          <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required />
+        </div>
+
+        <div class="form-group">
+          <label for="date">Data</label>
+          <input type="date" id="date" required />
+        </div>
+
+        <div class="form-group">
+          <label for="type">Tipo</label>
+          <select id="type" required>
+            <option value="DESPESA">Despesa</option>
+            <option value="RECEITA">Receita</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Categoria</label>
+          <input type="text" id="category" placeholder="Ex: Alimentação, Lazer..." required />
+        </div>
+
+        <div class="form-group btn-container">
+          <button type="submit" class="btn-primary">Adicionar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Tabela de Movimentações -->
+    <section class="transactions-section">
+      <div class="section-header">
+        <h2>Movimentações Registadas</h2>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th class="text-right">Valor</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-list">
+            <!-- Inserido dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/mockData.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
