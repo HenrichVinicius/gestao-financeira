@@ -41,6 +41,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
 }
 
 .topbar h1 {
@@ -55,8 +56,10 @@ body {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
+/* Cartões Superiores */
 .cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -93,6 +96,95 @@ body {
 .card-income .card-value { color: var(--income); }
 .card-expense .card-value { color: var(--expense); }
 .card-balance .card-value { color: var(--accent); }
+
+/* Seção de Contas e Cartões (Etapa 03) */
+.accounts-section {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .inline-form {
+    width: auto;
+  }
+  .inline-form input,
+  .inline-form select {
+    width: auto;
+    min-width: 150px;
+  }
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(56, 189, 248, 0.15);
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .accounts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.account-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.account-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.account-tag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background-color: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.account-balance {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.account-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
 
 /* Divisão entre Formulário e Gráfico */
 .dashboard-split {
@@ -132,8 +224,14 @@ body {
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.9rem;
+}
+
+@media (min-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .form-group {
@@ -232,7 +330,7 @@ select:focus {
 }
 
 .filters-bar input {
-  min-width: 220px;
+  min-width: 200px;
   flex: 1;
 }
 
@@ -265,6 +363,7 @@ th {
 .text-center { text-align: center; }
 .text-income { color: var(--income); }
 .text-expense { color: var(--expense); }
+.text-transfer { color: var(--accent); }
 
 .btn-delete {
   background: transparent;

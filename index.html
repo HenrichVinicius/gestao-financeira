@@ -11,15 +11,15 @@
   <header class="topbar">
     <div class="container">
       <h1>Finanças Pessoais</h1>
-      <span class="badge">Versão 1.2</span>
+      <span class="badge">Versão 1.3 (Contas e Cartões)</span>
     </div>
   </header>
 
   <main class="container main-content">
-    <!-- Resumo de Saldos -->
+    <!-- Resumo Geral -->
     <section class="cards-grid">
       <div class="card card-balance">
-        <h2>Saldo Atual</h2>
+        <h2>Saldo Consolidado (Contas)</h2>
         <p class="card-value" id="total-balance">R$ 0,00</p>
       </div>
       <div class="card card-income">
@@ -27,26 +27,43 @@
         <p class="card-value" id="total-income">R$ 0,00</p>
       </div>
       <div class="card card-expense">
-        <h2>Despesas</h2>
+        <h2>Despesas (Inclui Crédito)</h2>
         <p class="card-value" id="total-expense">R$ 0,00</p>
       </div>
     </section>
 
-    <!-- Formulário e Gráfico Lado a Lado no Desktop -->
+    <!-- Seção de Contas e Cartões -->
+    <section class="accounts-section">
+      <div class="section-header-flex">
+        <h2>Minhas Contas e Cartões</h2>
+        <form id="account-form" class="inline-form">
+          <input type="text" id="acc-name" placeholder="Nome (ex: Nubank, Itaú...)" required />
+          <select id="acc-type">
+            <option value="CONTA">Conta Corrente / Carteira</option>
+            <option value="CARTAO">Cartão de Crédito</option>
+          </select>
+          <input type="number" id="acc-initial" step="0.01" placeholder="Saldo Inicial / Limite (R$)" required />
+          <button type="submit" class="btn-secondary">+ Criar</button>
+        </form>
+      </div>
+      <div class="accounts-grid" id="accounts-list">
+        <!-- Renderizado via JS -->
+      </div>
+    </section>
+
+    <!-- Formulário e Gráfico -->
     <div class="dashboard-split">
-      <!-- Formulário de Nova Movimentação -->
       <section class="form-section">
         <h2>Nova Movimentação</h2>
         <form id="transaction-form" class="form-stack">
-          <div class="form-group">
-            <label for="desc">Descrição</label>
-            <input type="text" id="desc" placeholder="Ex: Mercado, Salário..." required />
-          </div>
-
           <div class="form-row">
             <div class="form-group">
-              <label for="amount">Valor (R$)</label>
-              <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required />
+              <label for="type">Tipo de Operação</label>
+              <select id="type" required>
+                <option value="DESPESA">Despesa</option>
+                <option value="RECEITA">Receita</option>
+                <option value="TRANSFERENCIA">Transferência entre Contas</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -57,44 +74,58 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="type">Tipo</label>
-              <select id="type" required>
-                <option value="DESPESA">Despesa</option>
-                <option value="RECEITA">Receita</option>
-              </select>
+              <label for="account-origin" id="label-origin">Conta / Cartão</label>
+              <select id="account-origin" required></select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="group-destination" style="display: none;">
+              <label for="account-destination">Conta de Destino</label>
+              <select id="account-destination"></select>
+            </div>
+
+            <div class="form-group" id="group-category">
               <label for="category">Categoria</label>
               <input type="text" id="category" placeholder="Ex: Alimentação, Lazer..." required />
             </div>
           </div>
 
-          <button type="submit" class="btn-primary full-width">Adicionar Movimentação</button>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="desc">Descrição</label>
+              <input type="text" id="desc" placeholder="Ex: Mercado, Salário..." required />
+            </div>
+
+            <div class="form-group">
+              <label for="amount">Valor (R$)</label>
+              <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary full-width">Registrar Movimentação</button>
         </form>
       </section>
 
-      <!-- Gráfico de Despesas por Categoria -->
+      <!-- Gráfico -->
       <section class="chart-section">
         <h2>Despesas por Categoria</h2>
         <div class="chart-container">
           <canvas id="expenses-chart"></canvas>
         </div>
-        <p id="chart-empty-msg" class="empty-msg" style="display: none;">Nenhuma despesa para exibir no gráfico.</p>
+        <p id="chart-empty-msg" class="empty-msg" style="display: none;">Nenhuma despesa para exibir.</p>
       </section>
     </div>
 
-    <!-- Tabela de Movimentações com Filtros -->
+    <!-- Tabela de Movimentações -->
     <section class="transactions-section">
       <div class="section-header-flex">
         <h2>Movimentações Registradas</h2>
-        
         <div class="filters-bar">
           <input type="text" id="filter-search" placeholder="Buscar descrição ou categoria..." />
           <select id="filter-type">
             <option value="TODOS">Todos os tipos</option>
             <option value="RECEITA">Apenas Receitas</option>
             <option value="DESPESA">Apenas Despesas</option>
+            <option value="TRANSFERENCIA">Apenas Transferências</option>
           </select>
         </div>
       </div>
@@ -105,15 +136,14 @@
             <tr>
               <th>Data</th>
               <th>Descrição</th>
+              <th>Conta / Cartão</th>
               <th>Categoria</th>
               <th>Tipo</th>
               <th class="text-right">Valor</th>
               <th class="text-center">Ações</th>
             </tr>
           </thead>
-          <tbody id="transactions-list">
-            <!-- Inserido dinamicamente via JS -->
-          </tbody>
+          <tbody id="transactions-list"></tbody>
         </table>
       </div>
     </section>

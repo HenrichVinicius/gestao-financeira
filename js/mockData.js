@@ -1,3 +1,9 @@
+const mockAccounts = [
+  { id: "acc-1", nome: "Conta Principal", tipo: "CONTA", saldoInicialCentavos: 0 },
+  { id: "acc-2", nome: "Carteira / Dinheiro", tipo: "CONTA", saldoInicialCentavos: 15000 }, // R$ 150,00
+  { id: "card-1", nome: "Cartão de Crédito", tipo: "CARTAO", limiteCentavos: 300000 } // Limite R$ 3.000,00
+];
+
 const mockTransactions = [
   {
     id: "tx-001",
@@ -5,7 +11,8 @@ const mockTransactions = [
     descricao: "Salário Mensal",
     categoria: "Receita Fixa",
     tipo: "RECEITA",
-    valorCentavos: 450000 // R$ 4.500,00
+    contaId: "acc-1",
+    valorCentavos: 450000
   },
   {
     id: "tx-002",
@@ -13,7 +20,8 @@ const mockTransactions = [
     descricao: "Supermercado Semanal",
     categoria: "Alimentação",
     tipo: "DESPESA",
-    valorCentavos: 38250 // R$ 382,50
+    contaId: "acc-1",
+    valorCentavos: 38250
   },
   {
     id: "tx-003",
@@ -21,7 +29,8 @@ const mockTransactions = [
     descricao: "Assinatura Streaming",
     categoria: "Lazer",
     tipo: "DESPESA",
-    valorCentavos: 5590 // R$ 55,90
+    contaId: "card-1", // Lançado no cartão de crédito
+    valorCentavos: 5590
   },
   {
     id: "tx-004",
@@ -29,14 +38,17 @@ const mockTransactions = [
     descricao: "Serviço Freelance",
     categoria: "Serviços",
     tipo: "RECEITA",
-    valorCentavos: 80000 // R$ 800,00
+    contaId: "acc-1",
+    valorCentavos: 80000
   },
   {
     id: "tx-005",
     data: "2026-10-15",
-    descricao: "Conta de Energia Elétrica",
-    categoria: "Moradia",
-    tipo: "DESPESA",
-    valorCentavos: 14520 // R$ 145,20
+    descricao: "Transferência para Carteira",
+    categoria: "Transferência",
+    tipo: "TRANSFERENCIA",
+    contaId: "acc-1",        // Origem
+    contaDestinoId: "acc-2", // Destino
+    valorCentavos: 20000
   }
 ];
