@@ -1,6 +1,6 @@
 const STORAGE_KEY = "gestao_financeira_transacoes";
+let expensesChartInstance = null;
 
-// Recupera dados salvos ou utiliza os mockTransactions iniciais
 function loadTransactions() {
   const data = localStorage.getItem(STORAGE_KEY);
   if (data) {
@@ -10,7 +10,6 @@ function loadTransactions() {
       console.error("Erro ao ler localStorage", e);
     }
   }
-  // Se não houver nada no disco, grava e usa os dados fictícios
   saveTransactions(mockTransactions);
   return [...mockTransactions];
 }
@@ -47,18 +46,112 @@ function calculateSummary(list) {
   };
 }
 
+function getFilteredTransactions() {
+  const searchTerm = document.getElementById("filter-search").value.toLowerCase().trim();
+  const typeFilter = document.getElementById("filter-type").value;
+
+  return transactions.filter((tx) => {
+    const matchesType = typeFilter === "TODOS" || tx.tipo === typeFilter;
+    const matchesSearch =
+      tx.descricao.toLowerCase().includes(searchTerm) ||
+      tx.categoria.toLowerCase().includes(searchTerm);
+
+    return matchesType && matchesSearch;
+  });
+}
+
+function renderChart(list) {
+  const canvas = document.getElementById("expenses-chart");
+  const emptyMsg = document.getElementById("chart-empty-msg");
+
+  // Agrupa despesas por categoria
+  const categoryTotals = {};
+  list.forEach((tx) => {
+    if (tx.tipo === "DESPESA") {
+      const cat = tx.categoria.trim();
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + tx.valorCentavos;
+    }
+  });
+
+  const labels = Object.keys(categoryTotals);
+  const values = Object.values(categoryTotals).map((cents) => cents / 100);
+
+  if (labels.length === 0) {
+    canvas.style.display = "none";
+    emptyMsg.style.display = "block";
+    if (expensesChartInstance) {
+      expensesChartInstance.destroy();
+      expensesChartInstance = null;
+    }
+    return;
+  }
+
+  canvas.style.display = "block";
+  emptyMsg.style.display = "none";
+
+  if (expensesChartInstance) {
+    expensesChartInstance.destroy();
+  }
+
+  const colors = [
+    "#38bdf8", "#f43f5e", "#eab308", "#a855f7",
+    "#22c55e", "#f97316", "#14b8a6", "#ec4899"
+  ];
+
+  expensesChartInstance = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderColor: "#1e293b",
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            color: "#f8fafc",
+            font: { size: 12 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const val = context.parsed || 0;
+              return " " + val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function render() {
-  // Atualiza totais nos cartões
-  const summary = calculateSummary(transactions);
+  const filteredList = getFilteredTransactions();
+
+  // Os cartões superiores refletem os lançamentos filtrados
+  const summary = calculateSummary(filteredList);
   document.getElementById("total-income").textContent = formatCurrency(summary.income);
   document.getElementById("total-expense").textContent = formatCurrency(summary.expense);
   document.getElementById("total-balance").textContent = formatCurrency(summary.balance);
 
-  // Renderiza linhas da tabela
+  // Atualiza o gráfico com base nos lançamentos filtrados
+  renderChart(filteredList);
+
+  // Renderiza a tabela
   const tableBody = document.getElementById("transactions-list");
   tableBody.innerHTML = "";
 
-  transactions.forEach((tx) => {
+  filteredList.forEach((tx) => {
     const row = document.createElement("tr");
     const isIncome = tx.tipo === "RECEITA";
     const sign = isIncome ? "+" : "-";
@@ -98,7 +191,6 @@ function handleAddTransaction(event) {
     return;
   }
 
-  // Multiplica por 100 e arredonda para guardar em cêntimos inteiros
   const valorCentavos = Math.round(amountFloat * 100);
 
   const newTx = {
@@ -114,7 +206,6 @@ function handleAddTransaction(event) {
   saveTransactions(transactions);
   render();
 
-  // Limpa o formulário após a submissão
   event.target.reset();
   setDefaultDate();
 }
@@ -130,6 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setDefaultDate();
   render();
 
-  const form = document.getElementById("transaction-form");
-  form.addEventListener("submit", handleAddTransaction);
+  document.getElementById("transaction-form").addEventListener("submit", handleAddTransaction);
+  document.getElementById("filter-search").addEventListener("input", render);
+  document.getElementById("filter-type").addEventListener("change", render);
 });
