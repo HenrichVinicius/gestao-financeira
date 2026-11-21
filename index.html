@@ -11,7 +11,7 @@
   <header class="topbar">
     <div class="container">
       <h1>Finanças Pessoais</h1>
-      <span class="badge">Versão 1.4 (Importação CSV)</span>
+      <span class="badge">Versão 1.5 (Simuladores)</span>
     </div>
   </header>
 
@@ -118,7 +118,7 @@
       <div class="section-header-flex">
         <div>
           <h2>Importar Extrato (CSV)</h2>
-          <p class="helper-text">Formato esperado: <code>Data;Descrição;Categoria;Valor</code> (valores negativos viram despesa e positivos viram receita).</p>
+          <p class="helper-text">Formato esperado: <code>Data;Descrição;Categoria;Valor</code></p>
         </div>
         <div class="import-controls">
           <select id="import-account" title="Conta de destino da importação"></select>
@@ -127,7 +127,6 @@
         </div>
       </div>
 
-      <!-- Área de Pré-visualização (oculta até carregar arquivo) -->
       <div id="import-preview-box" class="preview-box" style="display: none;">
         <div class="preview-header">
           <span id="preview-summary">0 itens encontrados</span>
@@ -154,7 +153,7 @@
     </section>
 
     <!-- Tabela de Movimentações -->
-    <section class="transactions-section">
+    <section class="transactions-section" style="margin-bottom: 1.5rem;">
       <div class="section-header-flex">
         <h2>Movimentações Registradas</h2>
         <div class="filters-bar">
@@ -185,9 +184,88 @@
         </table>
       </div>
     </section>
+
+    <!-- Simuladores Financeiros (Etapa 06) -->
+    <div class="simulators-grid">
+      <!-- Simulador de Empréstimos -->
+      <section class="form-section">
+        <h2>Simulador de Empréstimo / Financiamento</h2>
+        <form id="loan-form" class="form-stack">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loan-amount">Valor Solicitado (R$)</label>
+              <input type="number" id="loan-amount" step="0.01" min="1" placeholder="10000.00" required />
+            </div>
+            <div class="form-group">
+              <label for="loan-rate">Taxa de Juros (% ao mês)</label>
+              <input type="number" id="loan-rate" step="0.01" min="0" placeholder="1.80" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loan-months">Prazo (Meses)</label>
+              <input type="number" id="loan-months" min="1" max="420" placeholder="24" required />
+            </div>
+            <div class="form-group">
+              <label for="loan-system">Sistema de Amortização</label>
+              <select id="loan-system">
+                <option value="PRICE">Tabela Price (Parcelas Fixas)</option>
+                <option value="SAC">Tabela SAC (Decrescente)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="loan-fees">Taxas Extras / IOF / Tarifa (R$ - Opcional)</label>
+            <input type="number" id="loan-fees" step="0.01" min="0" placeholder="0.00" />
+          </div>
+
+          <button type="submit" class="btn-secondary full-width">Simular Empréstimo</button>
+        </form>
+        <div id="loan-result" class="sim-results-grid" style="display: none;"></div>
+      </section>
+
+      <!-- Simulador de Investimentos -->
+      <section class="form-section">
+        <h2>Simulador de Investimentos</h2>
+        <form id="inv-form" class="form-stack">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inv-initial">Aporte Inicial (R$)</label>
+              <input type="number" id="inv-initial" step="0.01" min="0" placeholder="1000.00" required />
+            </div>
+            <div class="form-group">
+              <label for="inv-monthly">Aporte Mensal (R$)</label>
+              <input type="number" id="inv-monthly" step="0.01" min="0" placeholder="300.00" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inv-rate">Rentabilidade (% ao mês)</label>
+              <input type="number" id="inv-rate" step="0.01" min="0" placeholder="0.95" required />
+            </div>
+            <div class="form-group">
+              <label for="inv-months">Tempo (Meses)</label>
+              <input type="number" id="inv-months" min="1" max="600" placeholder="12" required />
+            </div>
+          </div>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="inv-exempt" />
+            Isento de Imposto de Renda (LCI, LCA, Poupança)
+          </label>
+
+          <button type="submit" class="btn-secondary full-width">Simular Rendimento</button>
+        </form>
+        <div id="inv-result" class="sim-results-grid" style="display: none;"></div>
+      </section>
+    </div>
   </main>
 
   <script src="js/mockData.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/simulators.js"></script>
 </body>
 </html>
