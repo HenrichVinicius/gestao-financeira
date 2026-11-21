@@ -1,6 +1,7 @@
 const TX_STORAGE_KEY = "gestao_financeira_transacoes_v2";
 const ACC_STORAGE_KEY = "gestao_financeira_contas_v2";
 let expensesChartInstance = null;
+let pendingImports = [];
 
 function loadAccounts() {
   const data = localStorage.getItem(ACC_STORAGE_KEY);
@@ -38,66 +39,43 @@ function formatCurrency(cents) {
   });
 }
 
-// Calcula saldo atual de cada conta e fatura atual de cada cartão
 function calculateAccountBalances() {
   const balances = {};
 
   accounts.forEach((acc) => {
-    if (acc.tipo === "CONTA") {
-      balances[acc.id] = acc.saldoInicialCentavos || 0;
-    } else {
-      // Para cartão de crédito, acumula o valor da fatura atual
-      balances[acc.id] = 0;
-    }
+    balances[acc.id] = acc.tipo === "CONTA" ? (acc.saldoInicialCentavos || 0) : 0;
   });
 
   transactions.forEach((tx) => {
     if (tx.tipo === "RECEITA") {
-      if (balances[tx.contaId] !== undefined) {
-        balances[tx.contaId] += tx.valorCentavos;
-      }
+      if (balances[tx.contaId] !== undefined) balances[tx.contaId] += tx.valorCentavos;
     } else if (tx.tipo === "DESPESA") {
       const acc = accounts.find((a) => a.id === tx.contaId);
       if (acc) {
-        if (acc.tipo === "CONTA") {
-          balances[acc.id] -= tx.valorCentavos;
-        } else if (acc.tipo === "CARTAO") {
-          // Despesa no cartão aumenta a fatura
-          balances[acc.id] += tx.valorCentavos;
-        }
+        if (acc.tipo === "CONTA") balances[acc.id] -= tx.valorCentavos;
+        else if (acc.tipo === "CARTAO") balances[acc.id] += tx.valorCentavos;
       }
     } else if (tx.tipo === "TRANSFERENCIA") {
-      if (balances[tx.contaId] !== undefined) {
-        balances[tx.contaId] -= tx.valorCentavos;
-      }
-      if (balances[tx.contaDestinoId] !== undefined) {
-        balances[tx.contaDestinoId] += tx.valorCentavos;
-      }
+      if (balances[tx.contaId] !== undefined) balances[tx.contaId] -= tx.valorCentavos;
+      if (balances[tx.contaDestinoId] !== undefined) balances[tx.contaDestinoId] += tx.valorCentavos;
     }
   });
 
   return balances;
 }
 
-// Calcula indicadores gerais (Transferências NÃO entram como receita/despesa)
 function calculateSummary(list, accountBalances) {
   let income = 0;
   let expense = 0;
 
   list.forEach((tx) => {
-    if (tx.tipo === "RECEITA") {
-      income += tx.valorCentavos;
-    } else if (tx.tipo === "DESPESA") {
-      expense += tx.valorCentavos;
-    }
+    if (tx.tipo === "RECEITA") income += tx.valorCentavos;
+    else if (tx.tipo === "DESPESA") expense += tx.valorCentavos;
   });
 
-  // Saldo consolidado soma apenas contas correntes/carteiras
   let consolidatedBalance = 0;
   accounts.forEach((acc) => {
-    if (acc.tipo === "CONTA") {
-      consolidatedBalance += accountBalances[acc.id] || 0;
-    }
+    if (acc.tipo === "CONTA") consolidatedBalance += accountBalances[acc.id] || 0;
   });
 
   return { income, expense, consolidatedBalance };
@@ -107,10 +85,12 @@ function renderAccounts(accountBalances) {
   const container = document.getElementById("accounts-list");
   const originSelect = document.getElementById("account-origin");
   const destSelect = document.getElementById("account-destination");
+  const importSelect = document.getElementById("import-account");
 
   container.innerHTML = "";
   originSelect.innerHTML = "";
   destSelect.innerHTML = "";
+  importSelect.innerHTML = "";
 
   accounts.forEach((acc) => {
     const val = accountBalances[acc.id] || 0;
@@ -134,14 +114,9 @@ function renderAccounts(accountBalances) {
     `;
     container.appendChild(card);
 
-    // Popula seletores do formulário
-    const opt1 = new Option(acc.nome, acc.id);
-    originSelect.add(opt1);
-
-    if (!isCard) {
-      const opt2 = new Option(acc.nome, acc.id);
-      destSelect.add(opt2);
-    }
+    originSelect.add(new Option(acc.nome, acc.id));
+    importSelect.add(new Option(acc.nome, acc.id));
+    if (!isCard) destSelect.add(new Option(acc.nome, acc.id));
   });
 }
 
@@ -187,9 +162,7 @@ function renderChart(list) {
   canvas.style.display = "block";
   emptyMsg.style.display = "none";
 
-  if (expensesChartInstance) {
-    expensesChartInstance.destroy();
-  }
+  if (expensesChartInstance) expensesChartInstance.destroy();
 
   const colors = ["#38bdf8", "#f43f5e", "#eab308", "#a855f7", "#22c55e", "#f97316"];
 
@@ -282,15 +255,14 @@ function handleAddAccount(event) {
   if (!nome || isNaN(valFloat)) return;
 
   const cents = Math.round(valFloat * 100);
-  const newAcc = {
+  accounts.push({
     id: "acc-" + Date.now(),
     nome,
     tipo,
     saldoInicialCentavos: tipo === "CONTA" ? cents : 0,
     limiteCentavos: tipo === "CARTAO" ? cents : 0
-  };
+  });
 
-  accounts.push(newAcc);
   saveAccounts(accounts);
   event.target.reset();
   render();
@@ -312,7 +284,7 @@ function handleAddTransaction(event) {
     return;
   }
 
-  const newTx = {
+  transactions.unshift({
     id: "tx-" + Date.now(),
     data: date,
     descricao: desc,
@@ -321,15 +293,170 @@ function handleAddTransaction(event) {
     contaId,
     contaDestinoId: tipo === "TRANSFERENCIA" ? contaDestinoId : null,
     valorCentavos: Math.round(amountFloat * 100)
-  };
+  });
 
-  transactions.unshift(newTx);
   saveTransactions(transactions);
   render();
 
   event.target.reset();
   toggleTransferFields();
   setDefaultDate();
+}
+
+// --- LÓGICA DE IMPORTAÇÃO CSV ---
+
+function normalizeDate(rawDate) {
+  const clean = rawDate.trim();
+  // Converte DD/MM/AAAA para AAAA-MM-DD
+  if (clean.includes("/")) {
+    const parts = clean.split("/");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+    }
+  }
+  return clean;
+}
+
+function isDuplicate(item, contaId) {
+  return transactions.some(
+    (tx) =>
+      tx.contaId === contaId &&
+      tx.data === item.data &&
+      tx.descricao.toLowerCase() === item.descricao.toLowerCase() &&
+      tx.valorCentavos === item.valorCentavos
+  );
+}
+
+function handleCsvUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+    const targetAccountId = document.getElementById("import-account").value;
+
+    pendingImports = [];
+
+    lines.forEach((line, index) => {
+      const separator = line.includes(";") ? ";" : ",";
+      const cols = line.split(separator).map((c) => c.trim().replace(/^"|"$/g, ""));
+
+      if (cols.length < 4) return;
+      // Ignora linha de cabeçalho se houver
+      if (index === 0 && cols[0].toLowerCase().includes("data")) return;
+
+      const data = normalizeDate(cols[0]);
+      const descricao = cols[1];
+      const categoria = cols[2] || "Importado";
+      // Suporta formato brasileiro (-120,50) ou americano (-120.50)
+      const numericStr = cols[3].replace("R$", "").trim().replace(/\./g, "").replace(",", ".");
+      const amountFloat = parseFloat(numericStr);
+
+      if (!data || !descricao || isNaN(amountFloat) || amountFloat === 0) return;
+
+      const tipo = amountFloat < 0 ? "DESPESA" : "RECEITA";
+      const valorCentavos = Math.round(Math.abs(amountFloat) * 100);
+
+      const candidate = {
+        data,
+        descricao,
+        categoria,
+        tipo,
+        contaId: targetAccountId,
+        valorCentavos
+      };
+
+      candidate.duplicate = isDuplicate(candidate, targetAccountId);
+      pendingImports.push(candidate);
+    });
+
+    renderImportPreview();
+  };
+
+  reader.readAsText(file, "UTF-8");
+}
+
+function renderImportPreview() {
+  const box = document.getElementById("import-preview-box");
+  const tbody = document.getElementById("import-preview-list");
+  const summary = document.getElementById("preview-summary");
+
+  if (pendingImports.length === 0) {
+    alert("Nenhuma movimentação válida encontrada no arquivo CSV.");
+    box.style.display = "none";
+    return;
+  }
+
+  const newCount = pendingImports.filter((i) => !i.duplicate).length;
+  const dupCount = pendingImports.length - newCount;
+
+  summary.textContent = `${pendingImports.length} linhas lidas (${newCount} novas, ${dupCount} duplicadas ignoradas)`;
+  tbody.innerHTML = "";
+
+  pendingImports.forEach((item) => {
+    const row = document.createElement("tr");
+    const isIncome = item.tipo === "RECEITA";
+    row.innerHTML = `
+      <td>
+        <span class="status-badge ${item.duplicate ? "status-dup" : "status-new"}">
+          ${item.duplicate ? "Duplicado" : "Novo"}
+        </span>
+      </td>
+      <td>${item.data}</td>
+      <td>${item.descricao}</td>
+      <td>${item.categoria}</td>
+      <td class="text-right ${isIncome ? "text-income" : "text-expense"}">
+        ${isIncome ? "+" : "-"} ${formatCurrency(item.valorCentavos)}
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  box.style.display = "block";
+}
+
+function confirmImport() {
+  const validItems = pendingImports.filter((item) => !item.duplicate);
+
+  validItems.forEach((item, idx) => {
+    transactions.unshift({
+      id: "tx-imp-" + Date.now() + "-" + idx,
+      data: item.data,
+      descricao: item.descricao,
+      categoria: item.categoria,
+      tipo: item.tipo,
+      contaId: item.contaId,
+      contaDestinoId: null,
+      valorCentavos: item.valorCentavos
+    });
+  });
+
+  saveTransactions(transactions);
+  cancelImport();
+  render();
+}
+
+function cancelImport() {
+  pendingImports = [];
+  document.getElementById("csv-file-input").value = "";
+  document.getElementById("import-preview-box").style.display = "none";
+}
+
+function downloadSampleCsv() {
+  const csvContent =
+    "Data;Descricao;Categoria;Valor\n" +
+    "2026-11-18;Padaria Central;Alimentacao;-18,50\n" +
+    "2026-11-19;Posto Ipiranga;Transporte;-150,00\n" +
+    "2026-11-20;Reembolso Projeto;Servicos;320,00\n" +
+    "2026-10-05;Supermercado Semanal;Alimentacao;-382,50\n";
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "extrato_exemplo.csv";
+  link.click();
 }
 
 function toggleTransferFields() {
@@ -367,4 +494,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("transaction-form").addEventListener("submit", handleAddTransaction);
   document.getElementById("filter-search").addEventListener("input", render);
   document.getElementById("filter-type").addEventListener("change", render);
+
+  // Eventos de Importação
+  document.getElementById("csv-file-input").addEventListener("change", handleCsvUpload);
+  document.getElementById("btn-confirm-import").addEventListener("click", confirmImport);
+  document.getElementById("btn-cancel-import").addEventListener("click", cancelImport);
+  document.getElementById("btn-sample-csv").addEventListener("click", downloadSampleCsv);
 });

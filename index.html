@@ -11,7 +11,7 @@
   <header class="topbar">
     <div class="container">
       <h1>Finanças Pessoais</h1>
-      <span class="badge">Versão 1.3 (Contas e Cartões)</span>
+      <span class="badge">Versão 1.4 (Importação CSV)</span>
     </div>
   </header>
 
@@ -46,9 +46,7 @@
           <button type="submit" class="btn-secondary">+ Criar</button>
         </form>
       </div>
-      <div class="accounts-grid" id="accounts-list">
-        <!-- Renderizado via JS -->
-      </div>
+      <div class="accounts-grid" id="accounts-list"></div>
     </section>
 
     <!-- Formulário e Gráfico -->
@@ -114,6 +112,46 @@
         <p id="chart-empty-msg" class="empty-msg" style="display: none;">Nenhuma despesa para exibir.</p>
       </section>
     </div>
+
+    <!-- Importação de Extrato CSV -->
+    <section class="import-section">
+      <div class="section-header-flex">
+        <div>
+          <h2>Importar Extrato (CSV)</h2>
+          <p class="helper-text">Formato esperado: <code>Data;Descrição;Categoria;Valor</code> (valores negativos viram despesa e positivos viram receita).</p>
+        </div>
+        <div class="import-controls">
+          <select id="import-account" title="Conta de destino da importação"></select>
+          <input type="file" id="csv-file-input" accept=".csv,.txt" />
+          <button type="button" id="btn-sample-csv" class="btn-secondary">Baixar Exemplo CSV</button>
+        </div>
+      </div>
+
+      <!-- Área de Pré-visualização (oculta até carregar arquivo) -->
+      <div id="import-preview-box" class="preview-box" style="display: none;">
+        <div class="preview-header">
+          <span id="preview-summary">0 itens encontrados</span>
+          <div class="preview-actions">
+            <button type="button" id="btn-cancel-import" class="btn-delete">Cancelar</button>
+            <button type="button" id="btn-confirm-import" class="btn-primary">Confirmar Importação</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th class="text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
     <!-- Tabela de Movimentações -->
     <section class="transactions-section">
